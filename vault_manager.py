@@ -51,8 +51,8 @@ def init_db():
         c.execute("ALTER TABLE users ADD COLUMN item_count INTEGER DEFAULT 0")
         c.execute("ALTER TABLE users ADD COLUMN note_count INTEGER DEFAULT 0")
         c.execute("ALTER TABLE users ADD COLUMN file_count INTEGER DEFAULT 0")
-    except sqlite3.OperationalError:
-        pass # Columns already exist
+    except (sqlite3.OperationalError, ValueError):
+        pass # Columns already exist or Turso raised a duplicate error
         
     conn.commit()
     conn.close()
