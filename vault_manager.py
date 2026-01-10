@@ -1,14 +1,32 @@
 import sqlite3
-import json
 import os
+import json
 from datetime import datetime
+
+# Import Turso's drop-in replacement if available
+try:
+    import libsql as turso
+    HAS_TURSO = True
+except ImportError:
+    HAS_TURSO = False
 
 DB_NAME = "zk_vault_v2.db"
 
 def get_db_connection():
-    conn = sqlite3.connect(DB_NAME)
-    conn.row_factory = sqlite3.Row
-    return conn
+    url = os.environ.get("TURSO_DATABASE_URL")
+    token = os.environ.get("TURSO_AUTH_TOKEN")
+    
+    if url and HAS_TURSO:
+        # Use Turso Cloud (libsql)
+        # Turso URLs usually look like 'libsql://[db-name]-[user].turso.io'
+        conn = turso.connect(url, auth_token=token)
+        # Note: turso.connect returns a connection compatible with sqlite3
+        return conn
+    else:
+        # Local SQLite fallback
+        conn = sqlite3.connect(DB_NAME)
+        conn.row_factory = sqlite3.Row
+        return conn
 
 def init_db():
     conn = get_db_connection()

@@ -106,4 +106,13 @@ python security_audit.py
 
 ---
 
+## 🌩️ **Permanent Data Persistence (Turso)**
+To prevent data loss on Render's ephemeral disk, ZK-Vault supports **Turso** (Serverless SQLite).
+1.  **Create a DB**: Sign up at [Turso.tech](https://turso.tech) and create a new database.
+2.  **Get Credentials**: Get your `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN`.
+3.  **Deploy to Render**: Add these two as **Environment Variables** in your Render dashboard.
+    *   The app will automatically switch from local SQLite to Turso Cloud!
+
+---
+
 *Note: This project is designed for educational purposes to demonstrate advanced Zero-Knowledge architectural principles.*
