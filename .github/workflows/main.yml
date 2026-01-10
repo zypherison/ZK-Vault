@@ -25,11 +25,12 @@ jobs:
 
     - name: Run Cryptographic Tests
       run: |
-        pytest tests/test_crypto.py
+        python -m pytest tests/test_crypto.py
 
     - name: Run Security Strength Audit (Local Files)
       run: |
         # We only audit local files in CI, as the server isn't running
+        export PYTHONPATH=$PYTHONPATH:.
         python -c "from security_audit import audit_sri, audit_argon2_config; audit_sri(); audit_argon2_config()"
 
     - name: Build Docker Image (Dry Run)
