@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# Database
+*.db
+!nuked_vault.db # Optional: keep a demo DB if you want, but usually better to ignore
+zk_vault_v2.db
+old_vault.db.bak
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/

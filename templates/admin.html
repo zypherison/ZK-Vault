@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>ZK-Vault | Command Center</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--accent-color);
+            display: block;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+
+        .score-bar {
+            height: 8px;
+            background: #30363d;
+            border-radius: 4px;
+            overflow: hidden;
+            width: 100px;
+        }
+
+        .score-fill {
+            height: 100%;
+            background: var(--accent-color);
+        }
+
+        .score-fill.danger {
+            background: var(--danger-color);
+        }
+    </style>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/argon2-browser@1.18.0/dist/argon2-bundled.min.js"
+        integrity="sha384-XOR3aNvHciLPIf6r+2glkrmbBbLmIJ1EChMXjw8eBKBf8gE0rDq1TyUNuRdorOqi"
+        crossorigin="anonymous"></script>
+    <script src="/static/js/vault.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide) lucide.createIcons();
+        });
+
+        function adminLogout() {
+            showLoading("De-provisioning Admin Session...");
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 3000);
+        }
+    </script>
+</head>
+
+<body>
+    <div id="loading-overlay">
+        <div class="overlay-spinner"></div>
+        <p id="overlay-msg">Securing Connection...</p>
+    </div>
+    <div id="toast-container"></div>
+    <div style="width: 100%; max-width: 1100px; padding: 40px; margin: 0 auto;">
+        <header
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; border-bottom: 1px solid var(--border-color); padding-bottom: 20px;">
+            <div>
+                <h1 style="margin: 0; display: flex; align-items: center; gap: 12px; font-size: 24px;">
+                    <i data-lucide="shield-check" style="color: var(--accent-color)"></i>
+                    Admin Command Center
+                </h1>
+                <p style="color: var(--text-secondary); margin-top: 4px;">ZK-Vault Infrastructure & Security Telemetry
+                </p>
+            </div>
+            <button onclick="adminLogout()" class="secondary-btn" style="width: auto; padding: 10px 20px;">
+                <i data-lucide="log-out" size="16"></i> Logout Admin
+            </button>
+        </header>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-value">{{ stats.total_vaults }}</span>
+                <span class="stat-label">Total Vaults</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value">{{ stats.db_size }}</span>
+                <span class="stat-label">Database Size</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" style="color: var(--accent-color);">{{ stats.admin_status }}</span>
+                <span class="stat-label">System Health</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" style="font-size: 14px;">{{ stats.server_load }}</span>
+                <span class="stat-label">Server Load (1/5/15m)</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 style="display: flex; align-items: center; gap: 10px;">
+                <i data-lucide="bar-chart-3"></i>
+                User Security Audit
+            </h3>
+            <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 24px;">
+                Note: Plaintext is never seen. Scores are calculated client-side and synced as anonymous telemetry.
+            </p>
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Security Health</th>
+                        <th>Credentials</th>
+                        <th>Notes</th>
+                        <th>Files</th>
+                        <th>Known Breaches</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td data-label="Username">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <i data-lucide="user" size="14"></i>
+                                {{ user['username'] }}
+                            </div>
+                        </td>
+                        <td data-label="Security Health">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div class="score-bar">
+                                    <div class="score-fill {{ 'danger' if user['security_score'] < 50 else '' }}"
+                                        style="width: {{ user['security_score'] }}%;"></div>
+                                </div>
+                                <span style="font-size: 13px;">{{ user['security_score'] }}%</span>
+                            </div>
+                        </td>
+                        <td data-label="Credentials">
+                            <span style="font-size: 13px;">{{ user['item_count'] }}</span>
+                        </td>
+                        <td data-label="Notes">
+                            <span style="font-size: 13px;">{{ user['note_count'] }}</span>
+                        </td>
+                        <td data-label="Files">
+                            <span style="font-size: 13px;">{{ user['file_count'] }}</span>
+                        </td>
+                        <td data-label="Known Breaches">
+                            {% if user['pwned_count'] > 0 %}
+                            <span class="badge badge-pwned" style="font-size: 10px;">{{ user['pwned_count'] }}
+                                Found</span>
+                            {% else %}
+                            <span class="badge badge-safe" style="font-size: 10px;">None Found</span>
+                            {% endif %}
+                        </td>
+                        <td data-label="Status">
+                            {% if user['pwned_count'] > 0 or user['security_score'] < 50 %} <span
+                                style="color: var(--danger-color); font-size: 11px; font-weight: 600; display: flex; align-items: center; gap: 4px;">
+                                <i data-lucide="alert-circle" size="12"></i> ACTION
+                                </span>
+                                {% else %}
+                                <span
+                                    style="color: var(--accent-color); font-size: 11px; display: flex; align-items: center; gap: 4px;">
+                                    <i data-lucide="check-circle" size="12"></i> SECURE
+                                </span>
+                                {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+
+</html>

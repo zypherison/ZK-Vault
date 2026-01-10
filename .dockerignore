@@ -1,0 +1,12 @@
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.db
+zk_vault_v2.db
+old_vault.db.bak
+nuked_vault.db
+.git/
+.env
+tests/

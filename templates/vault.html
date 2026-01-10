@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZK-Vault | storage</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/argon2-browser@1.18.0/dist/argon2-bundled.min.js"
+        integrity="sha384-XOR3aNvHciLPIf6r+2glkrmbBbLmIJ1EChMXjw8eBKBf8gE0rDq1TyUNuRdorOqi"
+        crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide) lucide.createIcons();
+        });
+    </script>
+</head>
+
+<body>
+    <div id="loading-overlay">
+        <div class="overlay-spinner"></div>
+        <p id="overlay-msg">Securing Connection...</p>
+    </div>
+    <div id="toast-container"></div>
+    <div style="width: 100%; max-width: 800px; padding: 20px;">
+        <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="font-size: 24px;">🔐</div>
+                <div>
+                    <h2 style="margin: 0;">My Vault</h2>
+                    <span style="color: var(--text-secondary); font-size: 14px;">Logged in as {{ username }}</span>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div id="sync-status"
+                    style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #00ff00; opacity: 0.7;">
+                    <i data-lucide="cloud-check" size="14"></i>
+                    <span>Cloud Sync Active</span>
+                </div>
+                <button class="secondary-btn" style="width: auto; margin: 0;" onclick="logout()">Lock Vault</button>
+            </div>
+        </header>
+
+        <div class="card" style="margin-bottom: 20px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px; margin-bottom: 20px;">
+                <input type="text" id="new-site" placeholder="Site (e.g. Netflix)" style="margin:0;">
+                <input type="text" id="new-user" placeholder="Username" style="margin:0;">
+                <input type="password" id="new-pass" placeholder="Password" style="margin:0;">
+                <button onclick="addPassword()" style="width: auto; white-space: nowrap;">Add +</button>
+                <button id="cancel-edit-btn" onclick="cancelEdit()" class="secondary-btn"
+                    style="width: auto; display: none; margin:0;">Cancel</button>
+            </div>
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <textarea id="new-notes" placeholder="Secure Notes (Optional)"
+                    style="flex-grow: 1; padding: 12px; border-radius: 6px; background: #0d1117; border: 1px solid var(--border-color); color: var(--text-primary); font-family: var(--font-family); height: 45px; resize: none;"></textarea>
+                <div style="width: 150px; position: relative; overflow: hidden; display: inline-block;">
+                    <button class="secondary-btn" style="margin:0; font-size: 13px;">📎 Attachment</button>
+                    <input type="file" id="new-file"
+                        style="position: absolute; font-size: 100px; left: 0; top: 0; opacity: 0; cursor: pointer;">
+                </div>
+            </div>
+
+            <div id="loading" style="text-align: center; padding: 20px;">
+                <div class="loader"></div> Decrypting Vault securely on client...
+            </div>
+
+            <ul id="vault-list" class="vault-list hidden">
+                <!-- Items populated by JS -->
+            </ul>
+
+            <div id="empty-state" class="hidden"
+                style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                No passwords saved yet. Add one above!
+            </div>
+            <div class="card"
+                style="margin-top: 30px; display: flex; justify-content: space-between; align-items: center; padding: 20px;">
+                <div>
+                    <h4 style="margin:0;">Data Management</h4>
+                    <p style="margin:0; font-size: 12px; color: var(--text-secondary);">Import or Export your encrypted
+                        vault</p>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="secondary-btn" style="width: auto;" onclick="exportVault()">📥 Export JSON</button>
+                    <div style="position: relative; overflow: hidden; display: inline-block;">
+                        <button class="secondary-btn" style="width: auto;">📤 Import CSV</button>
+                        <input type="file" id="import-csv" accept=".csv"
+                            style="position: absolute; font-size: 100px; left: 0; top: 0; opacity: 0; cursor: pointer;"
+                            onchange="importVault(event)">
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; color: var(--text-secondary); font-size: 12px;">
+                <p>🔒 Zero-Knowledge Architecture: The server cannot read your passwords.</p>
+            </div>
+        </div>
+
+        <!-- Key Handling & Logic -->
+        <script src="/static/js/vault.js"></script>
+        <script>
+            // Init vault on load
+            document.addEventListener('DOMContentLoaded', async () => {
+                const key = sessionStorage.getItem('encryptionKey');
+                if (!key) {
+                    window.location.href = '/login';
+                    return;
+                }
+                await loadVault();
+            });
+        </script>
+</body>
+
+</html>

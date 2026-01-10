@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZK-Vault | Secure Login</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <!-- Load Argon2 Browser with SRI (Subresource Integrity) -->
+    <script src="https://cdn.jsdelivr.net/npm/argon2-browser@1.18.0/dist/argon2-bundled.min.js"
+        integrity="sha384-XOR3aNvHciLPIf6r+2glkrmbBbLmIJ1EChMXjw8eBKBf8gE0rDq1TyUNuRdorOqi"
+        crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+    <div id="loading-overlay">
+        <div class="overlay-spinner"></div>
+        <p id="overlay-msg">Securing Connection...</p>
+    </div>
+    <div id="toast-container"></div>
+    <div class="container">
+        <div class="card">
+            <div class="brand">
+                <div class="brand-icon">🔐</div>
+                <h1>ZK-Vault</h1>
+                <p style="color: var(--text-secondary);">Zero-Knowledge Encryption</p>
+            </div>
+
+            <div id="login-form">
+                <input type="text" id="username" placeholder="Username" autocomplete="off">
+                <input type="password" id="password" placeholder="Master Password">
+
+                <button id="login-btn" onclick="handleLogin()">Login</button>
+                <button class="secondary-btn" onclick="toggleMode()">Create New Vault</button>
+            </div>
+
+            <p id="status-msg"
+                style="text-align: center; margin-top: 10px; font-size: 14px; color: var(--text-secondary);"></p>
+        </div>
+    </div>
+
+    <!-- WebCrypto Implementation -->
+    <script src="/static/js/vault.js"></script>
+    <script>
+        let isRegistering = false;
+        const btn = document.getElementById('login-btn');
+        const secondary = document.querySelector('.secondary-btn');
+        const usernameInput = document.getElementById('username');
+
+        function toggleMode() {
+            isRegistering = !isRegistering;
+            if (isRegistering) {
+                btn.textContent = "Create & Encrypt Vault";
+                btn.onclick = handleRegister;
+                secondary.textContent = "Back to Login";
+            } else {
+                btn.textContent = "Login";
+                btn.onclick = handleLogin;
+                secondary.textContent = "Create New Vault";
+            }
+        }
+    </script>
+</body>
+
+</html>
