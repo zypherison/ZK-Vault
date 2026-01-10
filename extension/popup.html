@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>ZK-Vault Extension</title>
+    <style>
+        :root {
+            --bg-color: #030303;
+            --card-bg: #0a0a0a;
+            --accent-color: #ffffff;
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1a1;
+            --border-color: #1a1a1a;
+            --danger-color: #ff4444;
+            --success-color: #00ff66;
+        }
+
+        body {
+            width: 350px;
+            margin: 0;
+            padding: 15px;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, sans-serif;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .vault-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+            transition: transform 0.2s;
+        }
+
+        .vault-item:hover {
+            border-color: var(--text-secondary);
+        }
+
+        .item-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .item-title {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .item-user {
+            color: var(--text-secondary);
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .btn {
+            background: var(--accent-color);
+            color: black;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            width: 100%;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .icon-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #111;
+            border: 1px solid var(--border-color);
+            color: white;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        #login-view,
+        #vault-view {
+            width: 100%;
+        }
+
+        .autofill-badge {
+            font-size: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: var(--success-color);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="login-view">
+        <h3 style="margin-top:0">Unlock ZK-Vault</h3>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Master Password">
+        <button class="btn" id="login-btn">Unlock Vault</button>
+        <p id="status-msg" style="font-size: 11px; text-align: center; color: var(--text-secondary); margin-top: 10px;">
+        </p>
+    </div>
+
+    <div id="vault-view" class="hidden">
+        <div class="header">
+            <span style="font-weight:700">ZK-Vault 🛡️</span>
+            <button class="icon-btn" id="logout-btn"><i data-lucide="log-out"></i></button>
+        </div>
+
+        <div id="current-site-action" style="margin-bottom: 15px;">
+            <!-- Autofill for current site will appear here -->
+        </div>
+
+        <div id="extension-vault-list">
+            <!-- List of matchings/all items -->
+        </div>
+    </div>
+
+    <script src="lib/lucide.min.js"></script>
+    <script src="lib/argon2-bundled.min.js"></script>
+    <script src="popup.js"></script>
+</body>
+
+</html>

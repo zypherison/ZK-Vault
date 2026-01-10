@@ -8,3 +8,4 @@ zxcvbn
 pytest
 gunicorn
 libsql
+Flask-CORS

@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from flask_cors import CORS
 import os
 import vault_manager
 import crypto_engine
@@ -7,6 +8,7 @@ import json
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
+CORS(app, supports_credentials=True) # Enable CORS for Extension compatibility
 
 # Hardcoded Admin (Demo purposes)
 ADMIN_USERNAME = "admin"
@@ -28,7 +30,7 @@ def add_security_headers(response):
         "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com; "
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
         "font-src 'self' https://fonts.gstatic.com; "
-        "connect-src 'self' https://api.pwnedpasswords.com https://cdn.jsdelivr.net; "
+        "connect-src 'self' https://api.pwnedpasswords.com https://cdn.jsdelivr.net chrome-extension://*; "
         "worker-src 'self' blob:;"
     )
     return response
