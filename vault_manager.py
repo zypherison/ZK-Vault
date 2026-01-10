@@ -17,15 +17,19 @@ def get_db_connection():
     token = os.environ.get("TURSO_AUTH_TOKEN")
     
     if url and HAS_TURSO:
-        # Use Turso Cloud (libsql)
+        # Turso Cloud (libsql)
         conn = turso.connect(url, auth_token=token)
-        conn.row_factory = sqlite3.Row # Ensure consistency with local sqlite
         return conn
     else:
-        # Local SQLite fallback
+        # Local SQLite
         conn = sqlite3.connect(DB_NAME)
-        conn.row_factory = sqlite3.Row
         return conn
+
+def to_dict(cursor, row):
+    """Helper to convert a DB row to a dictionary."""
+    if row is None:
+        return None
+    return {column[0]: row[i] for i, column in enumerate(cursor.description)}
 
 def init_db():
     conn = get_db_connection()
@@ -72,7 +76,9 @@ def create_user(username, auth_hash, salt, encrypted_blob):
 
 def get_user(username):
     conn = get_db_connection()
-    user = conn.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchone()
+    c = conn.cursor()
+    row = c.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchone()
+    user = to_dict(c, row)
     conn.close()
     return user
 
@@ -88,6 +94,8 @@ def update_vault(username, encrypted_blob, security_score=0, pwned_count=0, item
 
 def get_all_users_admin():
     conn = get_db_connection()
-    users = conn.execute('SELECT username, encrypted_blob, security_score, pwned_count, item_count, note_count, file_count, created_at FROM users').fetchall()
+    c = conn.cursor()
+    rows = c.execute('SELECT username, encrypted_blob, security_score, pwned_count, item_count, note_count, file_count, created_at FROM users').fetchall()
+    users = [to_dict(c, r) for r in rows]
     conn.close()
     return users
