@@ -1,0 +1,37 @@
+name: ZK-Vault Security & Build CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-and-audit:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest requests
+
+    - name: Run Cryptographic Tests
+      run: |
+        pytest tests/test_crypto.py
+
+    - name: Run Security Strength Audit (Local Files)
+      run: |
+        # We only audit local files in CI, as the server isn't running
+        python -c "from security_audit import audit_sri, audit_argon2_config; audit_sri(); audit_argon2_config()"
+
+    - name: Build Docker Image (Dry Run)
+      run: |
+        docker build -t zk-vault:test .

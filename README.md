@@ -2,9 +2,9 @@
 
 > **"Server-Blind" Architecture**: The database stores only encrypted garbage. Even the admin cannot decrypt your passwords.
 
+![CI/CD](https://github.com/zypherison/ZK-Vault/actions/workflows/main.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![Security](https://img.shields.io/badge/security-Argon2id%20%2B%20AES--256--GCM-green)
-![Status](https://img.shields.io/badge/build-passing-brightgreen)
 
 ## 🎯 **Core Concept**
 Most password managers encrypt data, but **ZK-Vault** ensures the server *never* sees the encryption key.
@@ -96,45 +96,14 @@ python security_audit.py
 - **WASM Integrity**: Confirms SRI (Subresource Integrity) hashes for Argon2.
 - **Crypto Complexity**: Validates Argon2 memory-hard parameters.
 
+
 ---
 
-## 💼 Why This Matters (Resume)
+## 💼 Why This Matters
 - **Fintech Standard**: Uses the same logic as 1Password/LastPass Enterprise.
 - **Modern Crypto**: Not just SHA-256; uses memory-hard functions.
 - **Privacy First**: Demonstrates architectural understanding of "Trust No One" (TNO) models.
 
 ---
 
-## 🚢 Deployment Guide
-
-### Option 1: Render (Recommended)
-1. **Create a Web Service**: Connect your GitHub repo.
-2. **Environment Variables**: Add `PORT` (e.g., `5000`).
-3. **Database Persistence**:
-    * Render's free tier has an ephemeral disk. 
-    * To keep your data, go to the **Disk** tab and add a mount:
-        * **Name**: `vault-data`
-        * **Mount Path**: `/app/data`
-4. **Update `vault_manager.py`**: Change `DB_NAME` to `/app/data/vault.db` to ensure it saves to the persistent disk.
-
-### Option 2: Docker
-```bash
-docker build -t zk-vault .
-docker run -p 5000:5000 -e PORT=5000 zk-vault
-```
-
----
-
-## 🏗️ **Push to GitHub**
-1. **Initialize Git**:
-   ```bash
-   git init
-   git add .
-   git commit -m "feat: Zero-Knowledge Swiss Vault finalized"
-   ```
-2. **Push to Remote**:
-   ```bash
-   git remote add origin https://github.com/YOUR_USERNAME/zk-vault.git
-   git branch -M main
-   git push -u origin main
-   ```
+*Note: This project is designed for educational purposes to demonstrate advanced Zero-Knowledge architectural principles.*
