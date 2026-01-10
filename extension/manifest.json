@@ -12,6 +12,9 @@
         "https://zk-vault.onrender.com/*",
         "https://api.pwnedpasswords.com/*"
     ],
+    "content_security_policy": {
+        "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+    },
     "action": {
         "default_popup": "popup.html",
         "default_title": "Open ZK-Vault"
