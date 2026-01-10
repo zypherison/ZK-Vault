@@ -18,9 +18,8 @@ def get_db_connection():
     
     if url and HAS_TURSO:
         # Use Turso Cloud (libsql)
-        # Turso URLs usually look like 'libsql://[db-name]-[user].turso.io'
         conn = turso.connect(url, auth_token=token)
-        # Note: turso.connect returns a connection compatible with sqlite3
+        conn.row_factory = sqlite3.Row # Ensure consistency with local sqlite
         return conn
     else:
         # Local SQLite fallback
@@ -48,11 +47,13 @@ def init_db():
     
     # Migrate if needed
     try:
+        # Standard SQLite check
         c.execute("ALTER TABLE users ADD COLUMN item_count INTEGER DEFAULT 0")
         c.execute("ALTER TABLE users ADD COLUMN note_count INTEGER DEFAULT 0")
         c.execute("ALTER TABLE users ADD COLUMN file_count INTEGER DEFAULT 0")
-    except (sqlite3.OperationalError, ValueError):
-        pass # Columns already exist or Turso raised a duplicate error
+    except (sqlite3.OperationalError, ValueError, Exception) as e:
+        # Ignore duplicate column errors (common in both SQLite and Turso)
+        pass 
         
     conn.commit()
     conn.close()

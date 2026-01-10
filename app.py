@@ -138,8 +138,11 @@ def admin():
     users = vault_manager.get_all_users_admin()
     
     # Mock system stats
+    db_path = vault_manager.DB_NAME
+    db_size = f"{os.path.getsize(db_path) / 1024:.1f} KB" if os.path.exists(db_path) else "Cloud/Turso"
+    
     stats = {
-        "db_size": f"{os.path.getsize(vault_manager.DB_NAME) / 1024:.1f} KB",
+        "db_size": db_size,
         "total_vaults": len(users),
         "admin_status": "Online",
         "server_load": "0.15, 0.08, 0.02"

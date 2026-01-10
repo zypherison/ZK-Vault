@@ -54,6 +54,8 @@ python app.py
 - **Register**: Enter a username & master password. (Watch the "Deriving Keys" status).
 - **Vault**: Add passwords. They are encrypted *instantly* in your browser.
 - **Admin**: Go to `/admin` to see the "Garbage" the server holds.
+    - **Username**: `admin`
+    - **Password**: `admin123`
 
 ---
 
