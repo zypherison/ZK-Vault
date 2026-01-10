@@ -63,32 +63,44 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('login-btn').addEventListener('click', async () => {
         const user = document.getElementById('username').value;
         const pass = document.getElementById('password').value;
-        statusMsg.textContent = "Deriving Keys...";
+        statusMsg.textContent = "Step 1: Fetching Salt...";
+        console.log("Login initiated for:", user);
 
         try {
             // 1. Get Salt
-            const saltRes = await fetch(`${RENDER_URL}/api/user_salt?username=${user}`);
+            const saltRes = await fetch(`${RENDER_URL}/api/user_salt?username=${user}`, { credentials: 'include' });
             const saltData = await saltRes.json();
-            if (!saltData.salt) throw new Error("User not found");
+            console.log("Salt received:", saltData.salt ? "Yes" : "No");
+            if (!saltData.salt) throw new Error("User not found or connection error");
 
             // 2. Derive Keys
+            statusMsg.textContent = "Step 2: Deriving ZK-Keys (Heavy)...";
+            console.log("Starting Argon2...");
             const keys = await deriveKeys(pass, saltData.salt);
+            console.log("Keys derived successfully.");
 
             // 3. Login & Get Vault
+            statusMsg.textContent = "Step 3: Authenticating...";
             const loginRes = await fetch(`${RENDER_URL}/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: user, auth_hash: keys.authHash })
+                body: JSON.stringify({ username: user, auth_hash: keys.authHash }),
+                credentials: 'include'
             });
             const loginData = await loginRes.json();
+            console.log("Login status:", loginData.status);
             if (loginData.status !== 'success') throw new Error(loginData.message);
 
             // 4. Fetch Vault Blob
-            const vaultRes = await fetch(`${RENDER_URL}/api/vault`);
+            statusMsg.textContent = "Step 4: Syncing Vault...";
+            const vaultRes = await fetch(`${RENDER_URL}/api/vault`, { credentials: 'include' });
             const vaultData = await vaultRes.json();
+            console.log("Vault blob received.");
 
             // 5. Decrypt
+            statusMsg.textContent = "Step 5: Decrypting Vault...";
             const decryptedItems = await decryptVault(vaultData.encrypted_blob, keys.encryptionKey);
+            console.log("Vault decrypted. Items:", decryptedItems.length);
 
             // 6. Store in background for persistence
             chrome.runtime.sendMessage({
@@ -99,6 +111,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             showVault(decryptedItems);
         } catch (e) {
+            console.error("Login Error:", e);
             statusMsg.textContent = "Error: " + e.message;
         }
     });
@@ -111,6 +124,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function showVault(items) {
+    console.log("Rendering vault with", items.length, "items");
     document.getElementById('login-view').classList.add('hidden');
     document.getElementById('vault-view').classList.remove('hidden');
 
