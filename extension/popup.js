@@ -4,7 +4,7 @@ const RENDER_URL = "https://zk-vault.onrender.com";
 
 const CONFIG = {
     argon2: {
-        time: 5,
+        time: 2,
         mem: 1024 * 64,
         parallelism: 4,
         type: 2 // argon2id
