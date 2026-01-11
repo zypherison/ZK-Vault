@@ -6,6 +6,8 @@
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![Security](https://img.shields.io/badge/security-Argon2id%20%2B%20AES--256--GCM-green)
 
+## 🌐 **Live Demo**: [https://zk-vault.onrender.com](https://zk-vault.onrender.com)
+
 ## 🎯 **Core Concept**
 Most password managers encrypt data, but **ZK-Vault** ensures the server *never* sees the encryption key.
 1. **Client-Side Derivation**: Your Master Password never leaves your device.
