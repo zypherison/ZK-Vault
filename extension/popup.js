@@ -74,8 +74,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         try {
             let authHashToSend;
+            let keys = null; // Declare keys here so it's accessible later
 
-            // SPECIAL CASE: Admin bypasses ZK hashing to match server's hardcoded check
+            // SPECIAL CASE: Admin bypasses ZK hashing
             if (user === "admin") {
                 console.log("Admin detected, using plain authentication");
                 authHashToSend = pass;
@@ -88,15 +89,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 // 2. Derive Keys
                 statusMsg.textContent = "Step 2: Deriving ZK-Keys...";
-                const keys = await deriveKeys(pass, saltData.salt);
+                keys = await deriveKeys(pass, saltData.salt);
                 authHashToSend = keys.authHash;
-
-                // Store encryption key for later
-                chrome.runtime.sendMessage({ action: "storeKey", key: keys.encryptionKey, vault: [] });
             }
 
             // 3. Login
-            statusMsg.textContent = "Step 3: Verifying...";
             const loginRes = await fetch(`${RENDER_URL}/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -104,18 +101,24 @@ document.addEventListener('DOMContentLoaded', async () => {
                 credentials: 'include'
             });
             const loginData = await loginRes.json();
-            console.log("Login response:", loginData);
 
-            // 4. Fetch Vault Blob
+            if (loginData.status !== 'success') throw new Error(loginData.message);
+
+            // If Admin, stop here (Admin has no vault to decrypt)
+            if (user === "admin") {
+                statusMsg.textContent = "Admin Logged In. (No Vault)";
+                showVault([]); // Show empty vault for admin
+                return;
+            }
+
+            // 4. Fetch Vault Blob (Only for regular users)
             statusMsg.textContent = "Step 4: Syncing Vault...";
             const vaultRes = await fetch(`${RENDER_URL}/api/vault`, { credentials: 'include' });
             const vaultData = await vaultRes.json();
-            console.log("Vault blob received.");
 
             // 5. Decrypt
             statusMsg.textContent = "Step 5: Decrypting Vault...";
             const decryptedItems = await decryptVault(vaultData.encrypted_blob, keys.encryptionKey);
-            console.log("Vault decrypted. Items:", decryptedItems.length);
 
             // 6. Store in background for persistence
             chrome.runtime.sendMessage({
