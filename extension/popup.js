@@ -61,35 +61,50 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     document.getElementById('login-btn').addEventListener('click', async () => {
-        const user = document.getElementById('username').value;
-        const pass = document.getElementById('password').value;
+        const user = document.getElementById('username').value.trim();
+        const pass = document.getElementById('password').value.trim();
+
+        if (!user || !pass) {
+            statusMsg.textContent = "Please enter both fields.";
+            return;
+        }
+
         statusMsg.textContent = "Step 1: Fetching Salt...";
         console.log("Login initiated for:", user);
 
         try {
-            // 1. Get Salt
-            const saltRes = await fetch(`${RENDER_URL}/api/user_salt?username=${encodeURIComponent(user)}`, { credentials: 'include' });
-            const saltData = await saltRes.json();
-            console.log("Salt received:", saltData.salt ? "Yes" : "No");
-            if (!saltData.salt) throw new Error("User not found or connection error");
+            let authHashToSend;
 
-            // 2. Derive Keys
-            statusMsg.textContent = "Step 2: Deriving ZK-Keys (Heavy)...";
-            console.log("Starting Argon2...");
-            const keys = await deriveKeys(pass, saltData.salt);
-            console.log("Keys derived successfully.");
+            // SPECIAL CASE: Admin bypasses ZK hashing to match server's hardcoded check
+            if (user === "admin") {
+                console.log("Admin detected, using plain authentication");
+                authHashToSend = pass;
+                statusMsg.textContent = "Step 3: Authenticating Admin...";
+            } else {
+                // 1. Get Salt
+                const saltRes = await fetch(`${RENDER_URL}/api/user_salt?username=${encodeURIComponent(user)}`, { credentials: 'include' });
+                const saltData = await saltRes.json();
+                if (!saltData.salt) throw new Error("User not found or connection error");
 
-            // 3. Login & Get Vault
-            statusMsg.textContent = "Step 3: Authenticating...";
+                // 2. Derive Keys
+                statusMsg.textContent = "Step 2: Deriving ZK-Keys...";
+                const keys = await deriveKeys(pass, saltData.salt);
+                authHashToSend = keys.authHash;
+
+                // Store encryption key for later
+                chrome.runtime.sendMessage({ action: "storeKey", key: keys.encryptionKey, vault: [] });
+            }
+
+            // 3. Login
+            statusMsg.textContent = "Step 3: Verifying...";
             const loginRes = await fetch(`${RENDER_URL}/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: user, auth_hash: keys.authHash }),
+                body: JSON.stringify({ username: user, auth_hash: authHashToSend }),
                 credentials: 'include'
             });
             const loginData = await loginRes.json();
-            console.log("Login status:", loginData.status);
-            if (loginData.status !== 'success') throw new Error(loginData.message);
+            console.log("Login response:", loginData);
 
             // 4. Fetch Vault Blob
             statusMsg.textContent = "Step 4: Syncing Vault...";
