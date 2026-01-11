@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         try {
             // 1. Get Salt
-            const saltRes = await fetch(`${RENDER_URL}/api/user_salt?username=${user}`, { credentials: 'include' });
+            const saltRes = await fetch(`${RENDER_URL}/api/user_salt?username=${encodeURIComponent(user)}`, { credentials: 'include' });
             const saltData = await saltRes.json();
             console.log("Salt received:", saltData.salt ? "Yes" : "No");
             if (!saltData.salt) throw new Error("User not found or connection error");

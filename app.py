@@ -8,6 +8,14 @@ import json
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
+
+# FIX: Allow cookies in Cross-Origin Extension requests
+app.config.update(
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_SAMESITE='None',
+    SESSION_COOKIE_HTTPONLY=True
+)
+
 CORS(app, supports_credentials=True) # Enable CORS for Extension compatibility
 
 # Hardcoded Admin (Demo purposes)
@@ -35,6 +43,18 @@ def add_security_headers(response):
     )
     return response
 
+@app.before_request
+def restrict_admin_access():
+    """Globally gates the /admin route to ensure no session bypass."""
+    if request.path.startswith('/admin'):
+        if not session.get('is_admin') or session.get('user') != ADMIN_USERNAME:
+            return redirect(url_for('login'))
+    
+    # Gate the vault sync API to ensure only logged-in users can access it
+    if request.path.startswith('/api/vault') and request.method == 'GET':
+        if 'user' not in session:
+            return jsonify({"error": "Unauthorized"}), 401
+
 @app.route('/')
 def index():
     if 'user' in session:
@@ -53,23 +73,20 @@ def login():
     
     # Check Admin first
     if username == ADMIN_USERNAME and (password == ADMIN_PASSWORD_HASH or auth_hash == ADMIN_PASSWORD_HASH):
+        session.clear() # Clear any existing user data
         session['user'] = username
         session['is_admin'] = True
         return jsonify({"status": "success", "redirect": "/admin"})
 
     user = vault_manager.get_user(username)
     if user:
-        # User exists, verify hash
-        # In a real app, we would hash the auth_hash again. 
-        # For this demo, we assume the server stores the exact auth_hash the client sends 
-        # (Client should have already hashed it securely).
-        # To make it better: Server verifies crypto_engine.verify_password(stored, auth_hash)
-        pass
-        # Actually, let's keep it simple: Compare equality or verify using Argon2 on server
         if user['auth_hash'] == auth_hash:
+            session.clear()
             session['user'] = username
+            session['is_admin'] = False
             return jsonify({"status": "success", "redirect": "/vault"})
         else:
+            print(f"Login failed for {username}. Provided: {auth_hash[:10]}... Stored: {user['auth_hash'][:10]}...")
             return jsonify({"status": "error", "message": "Invalid credentials"}), 401
     else:
         # Register flow (Auto-register for demo simplicity if user doesn't exist? 
@@ -126,6 +143,11 @@ def api_vault():
 @app.route('/api/user_salt')
 def get_user_salt():
     username = request.args.get('username')
+    
+    # Check for hardcoded admin first
+    if username == ADMIN_USERNAME:
+        return jsonify({"salt": "admin_salt_placeholder"}) # Admin doesn't strictly need ZK salt but extension expects one
+        
     user = vault_manager.get_user(username)
     if user:
         return jsonify({"salt": user['salt']})
@@ -134,7 +156,8 @@ def get_user_salt():
 
 @app.route('/admin')
 def admin():
-    if not session.get('is_admin'):
+    # RIGOROUS Check: Must be logged in AND have the is_admin flag explicitly set
+    if not session.get('is_admin') or session.get('user') != ADMIN_USERNAME:
         return redirect(url_for('login'))
         
     users = vault_manager.get_all_users_admin()
