@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('login-btn').addEventListener('click', async () => {
         const user = document.getElementById('username').value.trim();
-        const pass = document.getElementById('password').value.trim();
+        const pass = document.getElementById('password').value; // Don't trim password! Matches web app behavior.
 
         if (!user || !pass) {
             statusMsg.textContent = "Please enter both fields.";
@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         try {
             let authHashToSend;
-            let keys = null; // Declare keys here so it's accessible later
+            let keys = null; // Defined in outer scope
 
             // SPECIAL CASE: Admin bypasses ZK hashing
             if (user === "admin") {
@@ -87,6 +87,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const saltData = await saltRes.json();
                 if (!saltData.salt) throw new Error("User not found or connection error");
 
+                console.log("Using Salt:", saltData.salt);
+
                 // 2. Derive Keys
                 statusMsg.textContent = "Step 2: Deriving ZK-Keys...";
                 keys = await deriveKeys(pass, saltData.salt);
@@ -94,6 +96,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             // 3. Login
+            statusMsg.textContent = "Step 3: Verifying...";
             const loginRes = await fetch(`${RENDER_URL}/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
